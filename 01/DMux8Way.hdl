@@ -16,5 +16,49 @@ CHIP DMux8Way {
     OUT a, b, c, d, e, f, g, h;
 
     PARTS:
-    // Put your code here:
+	Not(in=sel[0], out=NotSel0);
+	Not(in=sel[1], out=NotSel1);
+	Not(in=sel[2], out=NotSel2);
+
+	//PinA
+	And(a=NotSel2, b=NotSel1, out=AInitial);
+	And(a=AInitial, b=NotSel0, out=PinA);
+
+	//PinB
+	And(a=NotSel2, b=NotSel1, out=BInitial);
+	And(a=BInitial, b=sel[0], out=PinB);
+
+	//PinC
+	And(a=NotSel2, b=sel[1], out=CInitial);
+	And(a=CInitial, b=NotSel0, out=PinC);
+
+	//PinD
+	And(a=NotSel2, b=sel[1], out=DInitial);
+	And(a=DInitial, b=sel[0], out=PinD);
+
+	//PinE
+	And(a=sel[2], b=NotSel1, out=EInitial);
+	And(a=EInitial, b=NotSel0, out=PinE);
+
+	//PinF
+	And(a=sel[2], b=NotSel1, out=FInitial);
+	And(a=FInitial, b=sel[0], out=PinF);
+
+	//PinG
+	And(a=sel[2], b=sel[1], out=GInitial);
+	And(a=GInitial, b=NotSel0, out=PinG);
+
+	//PinH
+	And(a=sel[2], b=sel[1], out=HInitial);
+	And(a=HInitial, b=sel[0], out=PinH);
+
+	//Connection to output pins
+	And(a=PinA, b=in, out=a);
+	And(a=PinB, b=in, out=b);
+	And(a=PinC, b=in, out=c);
+	And(a=PinD, b=in, out=d);
+	And(a=PinE, b=in, out=e);
+	And(a=PinF, b=in, out=f);
+	And(a=PinG, b=in, out=g);
+	And(a=PinH, b=in, out=h);
 }
