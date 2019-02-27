@@ -70,7 +70,7 @@ class Parser
         sym = ""
         nums = Array['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', "-"]
 
-        while (i < @currentCommand.length)
+        while (i < @currentCommand.length and @currentCommand.slice(i) != '/')
             if (nums.include?(@currentCommand.slice(i)))
                 sym += @currentCommand.slice(i)
             else
@@ -107,14 +107,15 @@ class Parser
         result = ""
         i = 0
 
-        while ((i < @currentCommand.length) and (@currentCommand.slice(i) != "=" and @currentCommand.slice(i) != ";"))
+        while ((i < @currentCommand.length and @currentCommand.slice(i) != '/') and 
+                (@currentCommand.slice(i) != "=" and @currentCommand.slice(i) != ";"))
             i += 1
         end
 
         if (@currentCommand.slice(i) == "=")
             i += 1
 
-            while ((i < @currentCommand.length) and (@currentCommand.slice(i) != ";"))
+            while ((i < @currentCommand.length) and (@currentCommand.slice(i) != ";" and @currentCommand.slice(i) != '/'))
                 result += @currentCommand.slice(i)
                 i += 1
             end
@@ -141,7 +142,7 @@ class Parser
         if (@currentCommand.slice(i) == ";")
             i += 1
 
-            while (i < @currentCommand.length)
+            while (i < @currentCommand.length and @currentCommand.slice(i) != '/')
                 result += @currentCommand.slice(i)
                 i += 1
             end

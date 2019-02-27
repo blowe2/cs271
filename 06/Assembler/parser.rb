@@ -1,5 +1,7 @@
 #Parser class defined in parser.rb
 
+require 'symbolTable.rb'
+
 #Parses through .asm code
 class Parser
     #Initialize the parser object, puts the input file into an array
@@ -10,6 +12,8 @@ class Parser
         #Current command on specified line
         @location = 0
         @currentCommand = @commandArray[@location]
+        @table = SymbolTable.new
+        firstPass()
     end
 
     #Looks through the lines, removes white space, and adds the command if it is not a comment or empty line
@@ -58,6 +62,8 @@ class Parser
         result = ""
         if (@currentCommand.slice(0) == "@")
             result = "A_COMMAND"
+        elsif (@currentCommand.slice(0) == '(')
+            result = "L_COMMAND"
         else
             result = "C_COMMAND"
         end
@@ -70,32 +76,73 @@ class Parser
         sym = ""
         nums = Array['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', "-"]
 
-        while (i < @currentCommand.length)
-            if (nums.include?(@currentCommand.slice(i)))
-                sym += @currentCommand.slice(i)
-            else
-                raise "Invalid input"
+        if (nums.include?(@currentCommand.slice(i)))
+            while ((i < @currentCommand.length) and (@currentCommand.slice(i) != '/'))
+                if (nums.include?(@currentCommand.slice(i)))
+                    sym += @currentCommand.slice(i)
+                else
+                    raise "Invalid input"
+                end
+                i += 1
             end
-            i += 1
+        else
+            while ((i < @currentCommand.length) and (@currentCommand.slice(i) != '/'))
+                sym += @currentCommand.slice(i)
+                i += 1
+            end
+
+            if (@table.contains(sym) == false)
+                @table.addRAMEntry(sym)
+            end
+            sym = @table.GetAddress(sym)
         end
     return sym
     end
 
     #Returns the dest mnemonic of a C command
     def dest
-        result = ""
-        if (@currentCommand.slice(0) == "0")
-            result = "null"
-        else
-            endmarks = Array['=', ';']
-            i = 0
+        if (@currentCommand.include?'=')
+            result = ""
+            if (@currentCommand.slice(0) == "0")
+                result = "null"
+            else
+                endmarks = Array['=', ';']
+                i = 0
 
-            while (endmarks.include?(@currentCommand.slice(i)) != true)
-                result += @currentCommand.slice(i)
-                i += 1
+                while (endmarks.include?(@currentCommand.slice(i)) != true)
+                    result += @currentCommand.slice(i)
+                    i += 1
+                end
             end
+        else
+            result = 'null'
         end
     return result
+    end
+
+    #Function that iterates through the code and finds ROM addresses
+    def firstPass
+        currentLocation = @location
+        while (@location < @commandArray.length)
+            @currentCommand = @commandArray[@location]
+            
+            if (@currentCommand.slice(0) == '(')
+                sym = ''
+                i = 1
+
+                while (@currentCommand.slice(i) != ')')
+                    sym += @currentCommand.slice(i)
+                    i += 1
+                end
+                @table.addROMEntry(sym, currentLocation)
+            else
+                currentLocation += 1
+            end
+            @location += 1
+        end
+
+        @location = 0
+        @currentCommand = @commandArray[@location]
     end
 
     #Returns the comp mnemonic of a C command
@@ -103,14 +150,22 @@ class Parser
         result = ""
         i = 0
 
-        while ((i < @currentCommand.length) and (@currentCommand.slice(i) != "="))
+        while ((i < @currentCommand.length and @currentCommand.slice(i) != '/') and 
+            (@currentCommand.slice(i) != "=" and @currentCommand.slice(i) != ";"))
             i += 1
         end
 
         if (@currentCommand.slice(i) == "=")
             i += 1
 
-            while ((i < @currentCommand.length) and (@currentCommand.slice(i) != ";"))
+            while ((i < @currentCommand.length) and (@currentCommand.slice(i) != ";" and @currentCommand.slice(i) != '/'))
+                result += @currentCommand.slice(i)
+                i += 1
+            end
+        elsif (@currentCommand.slice(i) == ";")
+            i = 0
+
+            while ((i < @currentCommand.length) and (@currentCommand.slice(i) != ';'))
                 result += @currentCommand.slice(i)
                 i += 1
             end
@@ -130,7 +185,7 @@ class Parser
         if (@currentCommand.slice(i) == ";")
             i += 1
 
-            while (i < @currentCommand.length)
+            while (i < @currentCommand.length and @currentCommand.slice(i) != '/')
                 result += @currentCommand.slice(i)
                 i += 1
             end
